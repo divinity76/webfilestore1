@@ -1,6 +1,7 @@
 <?php
 declare(strict_types = 1);
 namespace Loltek\paste2\blobstore1;
+
 //
 function jsresponse($data): void
 {
