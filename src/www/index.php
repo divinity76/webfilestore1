@@ -24,5 +24,8 @@ $router->get("/(p|h)/(\d+)(?:/([\s\S]*))?", function (string $supplied_folder_na
 $router->post("/api/1/upload", function () {
     handle_upload_request();
 });
+$router->post("/api/1/delete", function () {
+    handle_delete_request();
+});
 
 $router->run();

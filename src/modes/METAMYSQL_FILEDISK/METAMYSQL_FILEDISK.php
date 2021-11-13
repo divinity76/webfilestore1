@@ -399,6 +399,7 @@ function handle_download_request(\Loltek\Phprouter\Phprouter $router, string $su
         $sql = "
 SELECT
       blobstore1_files_hidden.raw_blob_id,
+      blobstore1_files_hidden.deleted_date,
       blobstore1_basenames.basename,
       blobstore1_content_types.content_type,
       blobstore1_raw_blobs.hash
@@ -407,7 +408,8 @@ SELECT
    LEFT JOIN blobstore1_basenames ON blobstore1_basenames.id = blobstore1_files_hidden.basename_id
    LEFT JOIN blobstore1_content_types ON blobstore1_content_types.id = blobstore1_files_hidden.content_type_id
    LEFT JOIN blobstore1_raw_blobs ON blobstore1_raw_blobs.id = blobstore1_files_hidden.raw_blob_id
-WHERE blobstore1_files_hidden.id = " . db_quote($db, $supplied_id);
+WHERE
+ blobstore1_files_hidden.id = " . db_quote($db, $supplied_id);
         $data = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
         if (empty($data)) {
             $router->trigger404();
@@ -418,6 +420,8 @@ WHERE blobstore1_files_hidden.id = " . db_quote($db, $supplied_id);
             // $data now looks like
             array(
                 'raw_blob_id' => 3,
+                'deleted_date' => NULL,
+                'deleted_date' => '2021-11-13',
                 'basename' => 'untitled.txt',
                 'content_type' => 'text/plain; charset=utf-8',
                 'hash' => 'Fj����a�"X'
@@ -438,6 +442,12 @@ server resources/bandwidth, also this check is not vulnerable to timing-attack o
             echo "you are being redirected to {$url}";
             die();
         }
+        if (! empty($data["deleted_date"])) {
+            http_response_code(410);
+            echo "HTTP 410 Gone<br/>\nthis file was deleted on " . $data["deleted_date"] . "<br/>\n(but the metadata is still in our database for some reason)";
+            die();
+        }
+
         header("Content-Type: " . $data["content_type"]);
         $file_location_relative = implode(DIRECTORY_SEPARATOR, array(
             (int) floor($data["raw_blob_id"] / Config::MAX_FILES_PER_FOLDER),
@@ -450,13 +460,15 @@ server resources/bandwidth, also this check is not vulnerable to timing-attack o
         $sql = "
 SELECT
       blobstore1_files_public.raw_blob_id,
+      blobstore1_files_public.deleted_date,
       blobstore1_basenames.basename,
       blobstore1_content_types.content_type
    FROM
       `blobstore1_files_public`
    LEFT JOIN blobstore1_basenames ON blobstore1_basenames.id = blobstore1_files_public.basename_id
    LEFT JOIN blobstore1_content_types ON blobstore1_content_types.id = blobstore1_files_public.content_type_id
-WHERE blobstore1_files_public.id = " . db_quote($db, $supplied_id);
+WHERE 
+blobstore1_files_public.id = " . db_quote($db, $supplied_id);
         $data = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
         if (empty($data)) {
             $router->trigger404();
@@ -467,6 +479,8 @@ WHERE blobstore1_files_public.id = " . db_quote($db, $supplied_id);
             // $data now looks like
             array(
                 'raw_blob_id' => 3,
+                'deleted_date' => NULL,
+                'deleted_date' => '2021-11-13',
                 'basename' => 'untitled.txt',
                 'content_type' => 'text/plain; charset=utf-8'
             );
@@ -480,6 +494,11 @@ WHERE blobstore1_files_public.id = " . db_quote($db, $supplied_id);
             echo "you are being redirected to {$url}";
             die();
         }
+        if (! empty($data["deleted_date"])) {
+            http_response_code(410);
+            echo "HTTP 410 Gone<br/>\nthis file was deleted on " . $data["deleted_date"] . "<br/>\n(but the metadata is still in our database for some reason)";
+            die();
+        }
         header("Content-Type: " . $data["content_type"]);
         $file_location_relative = implode(DIRECTORY_SEPARATOR, array(
             (int) floor($data["raw_blob_id"] / Config::MAX_FILES_PER_FOLDER),
@@ -490,3 +509,67 @@ WHERE blobstore1_files_public.id = " . db_quote($db, $supplied_id);
     }
 }
 
+function handle_delete_request(): void
+{
+    $fakeobj = new class() {
+
+        private $response = [];
+
+        function __construct()
+        {
+            $admin_key_provided = (string) ($_POST['admin_key'] ?? "");
+
+            if (! Config::IS_DEV_SYSTEM && ! hash_equals(Config::ADMIN_KEY, $admin_key_provided)) {
+                http_response_code(403); // 403 forbidden
+                $this->response["errors"][] = "invalid admin_key provided.";
+                jsresponse($this->response);
+                die();
+            }
+
+            $file_to_delete = (string) ($_POST['file_to_delete'] ?? "");
+            if (false) {
+                // $file_to_delete look like either
+                "/p/4/untitled.php";
+                // or
+                "/h/9/0HsxB2GwjoRrZg/test_upload.php";
+            }
+            $file_to_delete = ltrim($file_to_delete, '/');
+            $delete_data = explode("/", $file_to_delete);
+            $folder = $delete_data[0];
+            if ($folder !== "p" && $folder !== "h") {
+                http_response_code(400);
+                $this->response["errors"][] = "unknown folder provided! i only know h and p...";
+                $this->response["errors"][] = $delete_data;
+                jsresponse($this->response);
+                die();
+            }
+            $is_hidden = ($folder === "h");
+            // $is_public = ($folder === "p");
+            $id = $delete_data[1];
+            $id_intified = filter_var($id, FILTER_VALIDATE_INT);
+            if ($id_intified === false) {
+                http_response_code(400);
+                $this->response["errors"][] = "delete id is non-int??";
+                $this->response["errors"][] = $delete_data;
+                jsresponse($this->response);
+                die();
+            }
+            $id = $id_intified;
+            unset($id_intified);
+            $db = Config::db_getPDO();
+            /** @var \PDO $db */
+            if ($is_hidden) {
+                $sql = "UPDATE blobstore1_files_hidden SET deleted_date = NOW() 
+ WHERE deleted_date IS NULL AND id = ".db_quote($db, $id);
+            } else {
+                $sql = "UPDATE blobstore1_files_public SET deleted_date = NOW() 
+ WHERE deleted_date IS NULL AND id = ".db_quote($db, $id);
+            }
+            $this->response["sql"] = $sql;
+            $this->response["records_updated"] = $db->exec($sql);
+            jsresponse($this->response);
+            die();
+        }
+    };
+    unset($fakeobj);
+}
