@@ -131,6 +131,7 @@ $cmd = implode(" ", array(
     'curl',
     '-v',
     escapeshellarg(Config::BASE_URL_WITH_SLASH . 'api/1/upload'),
+    '-F admin_key=' . escapeshellarg(Config::ADMIN_KEY),
     '-F upload_file_hidden=' . random_int(0, 1),
     '-F file_to_upload=@' . escapeshellarg($file_to_upload)
 ));
@@ -147,6 +148,7 @@ if (! empty($decoded["relative_url_small"]) && random_int(0, 1)) {
         'curl',
         '-v',
         escapeshellarg(Config::BASE_URL_WITH_SLASH . 'api/1/delete'),
+        '-F admin_key=' . escapeshellarg(Config::ADMIN_KEY),
         '-F file_to_delete=' . escapeshellarg((string) $decoded["relative_url_small"])
     ));
     test_exec($cmd, $stdout);
