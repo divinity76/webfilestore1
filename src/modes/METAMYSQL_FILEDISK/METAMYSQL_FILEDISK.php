@@ -627,6 +627,7 @@ ORDER BY id DESC;
         \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false
     ));
     $stm->execute();
+    $rowCounter = 0;
     while (($row = $stm->fetch(\PDO::FETCH_NAMED))) {
         if (false) {
             // $row should look like
@@ -637,6 +638,7 @@ ORDER BY id DESC;
                 'content_type' => 'text/plain; charset=utf-8'
             );
         }
+        ++ $rowCounter;
         $id = $row["id"];
         $expire_date = $row["expire_date"];
         if ($expire_date === null) {
@@ -647,4 +649,6 @@ ORDER BY id DESC;
 
         echo "<span>{$id}: <a href='{$id}/'>{$basename}</a> - expires {$expire_date}, content-type: {$content_type}</span><br/>\n";
     }
+    echo "<br/>\nrowCounter: ";
+    var_dump($rowCounter);
 }
