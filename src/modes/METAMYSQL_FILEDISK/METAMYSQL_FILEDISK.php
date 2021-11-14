@@ -443,9 +443,7 @@ server resources/bandwidth, also this check is not vulnerable to timing-attack o
             die();
         }
         if (! empty($data["deleted_date"])) {
-            http_response_code(410);
-            echo "HTTP 410 Gone<br/>\nthis file was deleted on " . $data["deleted_date"] . "<br/>\n(but the metadata is still in our database for some reason)";
-            die();
+            Config::x410_callback($data);
         }
 
         header("Content-Type: " . $data["content_type"]);
@@ -495,9 +493,7 @@ blobstore1_files_public.id = " . db_quote($db, $supplied_id);
             die();
         }
         if (! empty($data["deleted_date"])) {
-            http_response_code(410);
-            echo "HTTP 410 Gone<br/>\nthis file was deleted on " . $data["deleted_date"] . "<br/>\n(but the metadata is still in our database for some reason)";
-            die();
+            Config::x410_callback($data);
         }
         header("Content-Type: " . $data["content_type"]);
         $file_location_relative = implode(DIRECTORY_SEPARATOR, array(

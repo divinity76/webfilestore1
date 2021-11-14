@@ -6,7 +6,7 @@ require_once (__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . "incl
 
 $router = new \Loltek\phprouter\Phprouter();
 $router->set404(function () {
-    echo "404 not found...";
+    Config::x404_callback();
 });
 $router->get("/favicon\\.ico", function () {
     // ...todo?
