@@ -327,7 +327,7 @@ function handle_upload_request(): void
             }
             if (disk_free_space(Config::BLOBS_MAIN_FOLDER_WITHOUT_TRAILING_SLASH) <= ($file["size"] + Config::MINIMUM_FREE_DISK_SPACE_BYTES)) {
                 http_response_code(500);
-                $errmsg = "server don't have enough free disk space: have " . disk_free_space(Config::BLOBS_MAIN_FOLDER_WITHOUT_TRAILING_SLASH) . " bytes, but minimum configured to " . Config::MINIMUM_FREE_DISK_SPACE_BYTES;
+                $errmsg = "server don't have enough free disk space: have " . var_export(disk_free_space(Config::BLOBS_MAIN_FOLDER_WITHOUT_TRAILING_SLASH), true) . " bytes, but minimum configured to " . Config::MINIMUM_FREE_DISK_SPACE_BYTES;
                 $response["errors"][] = $errmsg;
                 jsresponse($response);
                 throw new \RuntimeException($errmsg);
