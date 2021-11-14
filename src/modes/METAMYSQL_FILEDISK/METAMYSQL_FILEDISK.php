@@ -255,7 +255,8 @@ function handle_upload_request(): void
                     'admin_key' => Config::ADMIN_KEY,
                     'upload_file_hidden' => false,
                     'upload_file_content_type' => '',
-                    'upload_file_basename' => 'untitled.txt'
+                    'upload_file_basename' => 'untitled.txt',
+                    'expire_timestamp' => '2100-01-01'
                 );
                 // sample $_FILES:
                 $_FILES = array(
@@ -277,6 +278,22 @@ function handle_upload_request(): void
                 jsresponse($this->response);
                 die();
             }
+
+            $expire_timestamp_provided = (string) ($_POST['expire_timestamp'] ?? null);
+            if (empty($expire_timestamp_provided)) {
+                $expire_timestamp_provided = null;
+            } else {
+                try {
+                    $expire_timestamp_provided = new \DateTimeImmutable($expire_timestamp_provided);
+                } catch (\Throwable $ex) {
+                    http_response_code(400);
+                    $this->response["errors"][] = "invalid expire_timestamp!";
+                    $this->response["errors"][] = $_POST['expire_timestamp'];
+                    jsresponse($this->response);
+                    die();
+                }
+            }
+
             if (empty($_FILES['file_to_upload'])) {
                 http_response_code(400);
                 $response["errors"][] = "\$_FILES['file_to_upload'] is missing!";
@@ -332,6 +349,9 @@ function handle_upload_request(): void
                 'content_type_id' => $this->get_content_type_id((string) ($_POST['upload_file_content_type'] ?? ""), $file["tmp_name"]),
                 'basename_id' => $this->get_basename_id($basename_supplied, $first_512_bytes_contains_nulls, $file["tmp_name"])
             ];
+            if (! empty($expire_timestamp_provided)) {
+                $data["deleted_date"] = $expire_timestamp_provided;
+            }
             // PS after calling get_raw_blob_id(), if there are further errors, we need to manually delete
             // $file["tmp_name"], php will no longer auto-delete it after we moved it..
             $data["raw_blob_id"] = $this->get_raw_blob_id($file["tmp_name"]);
@@ -442,7 +462,7 @@ server resources/bandwidth, also this check is not vulnerable to timing-attack o
             echo "you are being redirected to {$url}";
             die();
         }
-        if (! empty($data["deleted_date"])) {
+        if (! empty($data["deleted_date"]) && strtotime($data["deleted_date"]) <= time()) {
             Config::x410_callback($data);
         }
 
@@ -492,7 +512,7 @@ blobstore1_files_public.id = " . db_quote($db, $supplied_id);
             echo "you are being redirected to {$url}";
             die();
         }
-        if (! empty($data["deleted_date"])) {
+        if (! empty($data["deleted_date"]) && strtotime($data["deleted_date"]) <= time()) {
             Config::x410_callback($data);
         }
         header("Content-Type: " . $data["content_type"]);
@@ -552,14 +572,15 @@ function handle_delete_request(): void
             }
             $id = $id_intified;
             unset($id_intified);
+
             $db = Config::db_getPDO();
             /** @var \PDO $db */
             if ($is_hidden) {
                 $sql = "UPDATE blobstore1_files_hidden SET deleted_date = NOW() 
- WHERE deleted_date IS NULL AND id = ".db_quote($db, $id);
+ WHERE deleted_date IS NULL AND id = " . db_quote($db, $id);
             } else {
                 $sql = "UPDATE blobstore1_files_public SET deleted_date = NOW() 
- WHERE deleted_date IS NULL AND id = ".db_quote($db, $id);
+ WHERE deleted_date IS NULL AND id = " . db_quote($db, $id);
             }
             $this->response["sql"] = $sql;
             $this->response["records_updated"] = $db->exec($sql);

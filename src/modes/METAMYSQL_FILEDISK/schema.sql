@@ -18,7 +18,7 @@ CREATE TABLE blobstore1_files_public
    raw_blob_id INTEGER UNSIGNED NOT NULL,
    content_type_id SMALLINT UNSIGNED NOT NULL,
    basename_id INTEGER UNSIGNED NOT NULL,
-   deleted_date DATE NULL DEFAULT NULL
+   deleted_date DATETIME NULL DEFAULT NULL
 )
 COMMENT= 'public blobs with names and content types..';
 CREATE TABLE blobstore1_files_hidden
@@ -27,7 +27,7 @@ CREATE TABLE blobstore1_files_hidden
    raw_blob_id INTEGER UNSIGNED NOT NULL,
    content_type_id SMALLINT UNSIGNED NOT NULL,
    basename_id INTEGER UNSIGNED NOT NULL,
-   deleted_date DATE NULL DEFAULT NULL
+   deleted_date DATETIME NULL DEFAULT NULL
 )
 COMMENT= 'hidden blobs with names and content types..';
 CREATE TABLE blobstore1_content_types

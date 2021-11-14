@@ -33,6 +33,9 @@ function db_quote(\PDO $db, $data): string
         }
         return number_format($data, 20, '.', '');
     }
+    if ($data instanceof \DateTimeInterface) {
+        $data = $data->format(\DateTimeInterface::RFC3339);
+    }
 
     if (is_string($data)) {
         return $db->quote($data);
