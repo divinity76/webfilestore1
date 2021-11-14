@@ -124,8 +124,7 @@ function handle_upload_request(): void
                     escapeshellarg($file_path)
                 ));
                 $content_type = trim(shell_exec($cmd));
-                $replace_text_x_with_text_plain = true;
-                if ($replace_text_x_with_text_plain) {
+                if (Config::REPLACE_TEXT_X_WITH_TEXT_PLAIN) {
                     if (preg_match('/^text\\/x\\-[^\\;]+;/', $content_type)) {
                         // its something like "text/x-c++; charset=us-ascii" / "text/x-php; charset=us-ascii";
                         // which browsers (at least Firefox 93) treat as a download..

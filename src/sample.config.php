@@ -53,9 +53,11 @@ class Config
 
     const BLOBS_MAIN_FOLDER_WITHOUT_TRAILING_SLASH = __DIR__ . DIRECTORY_SEPARATOR . "blobs";
 
+    const REPLACE_TEXT_X_WITH_TEXT_PLAIN = false;
+
     public static function front_page_callback(): void
     {
-        echo 'you\'re probably looking for <a href="https://paste.Loltek.net">https://paste.Loltek.net</a>';
+        echo 'you\'re probably looking for <a href="https://paste.Loltek.net">https://paste.loltek.net</a>';
     }
 
     // here you can customize 404 responses..
