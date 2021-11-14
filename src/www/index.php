@@ -23,6 +23,9 @@ $router->get("/(p|h)/(\d+)(?:/([\s\S]*))?", function (string $supplied_folder_na
     // var_dump(func_get_args());die();
     handle_download_request($router, $supplied_folder_name, $supplied_id, $supplied_hash_and_or_title);
 });
+$router->get("/p/", function () {
+    handle_public_index_request();
+});
 
 $router->post("/api/1/upload", function () {
     handle_upload_request();

@@ -71,3 +71,13 @@ if (! function_exists('str_starts_with')) {
         return ($needle_len === 0 || 0 === strncmp($haystack, $needle, $needle_len));
     }
 }
+/**
+ * convert any string to valid HTML, as losslessly as possible, assuming UTF-8
+ *
+ * @param string $str
+ * @return string
+ */
+function tohtml1(string $str): string {
+    return htmlentities ( $str, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE | ENT_DISALLOWED, 'UTF-8', true );
+}
+

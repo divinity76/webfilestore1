@@ -602,3 +602,50 @@ function handle_delete_request(): void
     };
     unset($fakeobj);
 }
+
+function handle_public_index_request(): void
+{
+    $db = Config::db_getPDO();
+    $sql = "
+SELECT
+      blobstore1_files_public.id,
+      blobstore1_files_public.deleted_date AS expire_date,
+      blobstore1_basenames.basename,
+      blobstore1_content_types.content_type
+   FROM
+      `blobstore1_files_public`
+   LEFT JOIN blobstore1_basenames ON blobstore1_basenames.id = blobstore1_files_public.basename_id
+   LEFT JOIN blobstore1_content_types ON blobstore1_content_types.id = blobstore1_files_public.content_type_id
+WHERE (deleted_date > NOW() OR deleted_date IS NULL)
+ORDER BY id DESC;
+";
+    echo '<style>span{ border:black solid thin;}</style>';
+
+    echo "<pre>public index! the sql used was\n";
+    echo tohtml1($sql);
+    echo "\n";
+    $stm = $db->prepare($sql, array(
+        \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false
+    ));
+    $stm->execute();
+    while (($row = $stm->fetch(\PDO::FETCH_NAMED))) {
+        if (false) {
+            // $row should look like
+            array(
+                'id' => 42,
+                'expire_date' => NULL,
+                'basename' => 'test_upload.php',
+                'content_type' => 'text/plain; charset=utf-8'
+            );
+        }
+        $id = $row["id"];
+        $expire_date = $row["expire_date"];
+        if ($expire_date === null) {
+            $expire_date = "null";
+        }
+        $basename = tohtml1($row["basename"]);
+        $content_type = tohtml1($row["content_type"]);
+
+        echo "<span>{$id}: <a href='{$id}/'>{$basename}</a> - expires {$expire_date}, content-type: {$content_type}</span><br/>\n";
+    }
+}
