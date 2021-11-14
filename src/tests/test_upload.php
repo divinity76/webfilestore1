@@ -108,7 +108,9 @@ function isJson($string)
     @json_decode($string);
     return json_last_error() === JSON_ERROR_NONE;
 }
-function test_exec(string $cmd, string &$stdout = null, string &$stderr = null):void{
+
+function test_exec(string $cmd, string &$stdout = null, string &$stderr = null): void
+{
     echo "{$cmd}\n";
     $stdin = $stdout = $stderr = "";
     $print_std = true;
@@ -118,7 +120,6 @@ function test_exec(string $cmd, string &$stdout = null, string &$stderr = null):
         echo "\njson prettified:\n", json_encode_pretty(json_decode($stdout, true)), "\n";
     }
     var_dump($ret);
-    
 }
 
 /** @var string[] $argv */
@@ -137,8 +138,8 @@ $stdout = "";
 test_exec($cmd, $stdout);
 $decoded = (isJson($stdout) ? json_decode($stdout, true) : null);
 
-if(!empty($decoded["relative_url_small"]) && random_int(0,1)){
-    echo "testing delete!";
+if (! empty($decoded["relative_url_small"]) && random_int(0, 1)) {
+    echo "testing delete!\n";
 
     $cmd = implode(" ", array(
         '/usr/bin/time',
@@ -146,7 +147,7 @@ if(!empty($decoded["relative_url_small"]) && random_int(0,1)){
         'curl',
         '-v',
         escapeshellarg(Config::BASE_URL_WITH_SLASH . 'api/1/delete'),
-        '-F file_to_delete=' .escapeshellarg((string)$decoded["relative_url_small"])
+        '-F file_to_delete=' . escapeshellarg((string) $decoded["relative_url_small"])
     ));
     test_exec($cmd, $stdout);
 }

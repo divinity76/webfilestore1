@@ -543,6 +543,20 @@ function handle_delete_request(): void
             }
 
             $file_to_delete = (string) ($_POST['file_to_delete'] ?? "");
+            $deleted_date = (string) ($_POST['deleted_date'] ?? "");
+            if (empty($deleted_date)) {
+                $deleted_date = date(\DateTimeInterface::RFC3339);
+            } else {
+                try {
+                    $deleted_date = (new \DateTimeImmutable($deleted_date))->format(\DateTimeInterface::RFC3339);
+                } catch (\Throwable $ex) {
+                    http_response_code(400);
+                    $this->response["errors"][] = "invalid _POST['deleted_date']";
+                    $this->response["errors"][] = $ex;
+                    jsresponse($this->response);
+                    die();
+                }
+            }
             if (false) {
                 // $file_to_delete look like either
                 "/p/4/untitled.php";
@@ -575,13 +589,11 @@ function handle_delete_request(): void
 
             $db = Config::db_getPDO();
             /** @var \PDO $db */
-            if ($is_hidden) {
-                $sql = "UPDATE blobstore1_files_hidden SET deleted_date = NOW() 
- WHERE deleted_date IS NULL AND id = " . db_quote($db, $id);
-            } else {
-                $sql = "UPDATE blobstore1_files_public SET deleted_date = NOW() 
- WHERE deleted_date IS NULL AND id = " . db_quote($db, $id);
-            }
+            $table = ($is_hidden ? "`blobstore1_files_hidden`" : "`blobstore1_files_public`");
+            $sql = "UPDATE {$table} SET deleted_date = " . db_quote($db, $deleted_date) . "
+ WHERE
+-- deleted_date IS NULL AND
+ id = " . db_quote($db, $id);
             $this->response["sql"] = $sql;
             $this->response["records_updated"] = $db->exec($sql);
             jsresponse($this->response);
