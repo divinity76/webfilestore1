@@ -12,7 +12,11 @@ $router->get("/favicon\\.ico", function () {
     // ...todo?
     header("Location: https://developer.mozilla.org/favicon.ico", true, 307);
 });
+$router->get("/robots.txt", function () {
+    readfile(__DIR__ . DIRECTORY_SEPARATOR . "robots.txt");
+});
 $router->get("/", function () {
+
     echo 'you\'re probably looking for <a href="https://paste.Loltek.net">https://paste.Loltek.net</a>';
 });
 
