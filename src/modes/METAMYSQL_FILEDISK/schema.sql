@@ -11,7 +11,7 @@ COMMENT = "stuff like schema_version..";
 INSERT INTO blobstore1_metadata SET name= 'schema_version',
 value = '0.1';
 INSERT INTO blobstore1_metadata SET name= 'deploy_mode',
-value = 'MODES_METAMYSQL_FILEDISK_APACHE_XSENDFILE';
+value = 'MODES_METAMYSQL_FILEDISK';
 CREATE TABLE blobstore1_files_public
 (
    id INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
