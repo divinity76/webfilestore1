@@ -3,7 +3,7 @@ declare(strict_types = 1);
 namespace Loltek\paste2\blobstore1;
 
 if (! file_exists("config.php")) {
-    die("config.php does not exist, you must make a copy of DIST.config.php named config.php\n");
+    die("config.php does not exist, you must make a copy of sample.config.php named config.php\n");
 }
 require_once ('config.php');
 
